@@ -29,7 +29,7 @@ app.use("/api/v1", userRoutes);
     await sequelize.authenticate();
     console.log("✅ DB connection successful");
 
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: false });
     console.log("✅ Database synced");
   } catch (err) {
     console.error("❌ DB connection failed:", err);
