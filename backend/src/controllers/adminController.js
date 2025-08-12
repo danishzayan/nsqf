@@ -1,5 +1,6 @@
 import State from "../models/State.js";
 import District from "../models/District.js";
+import  City  from "../models/City.js";
 
 // ✅ Add State
 export const addState = async (req, res) => {
@@ -51,3 +52,38 @@ export const addDistrict = async (req, res) => {
     res.status(500).json({ message: "Error adding district", error: error.message });
   }
 };
+
+// ✅ Add City
+export const addCity = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admin can add cities" });
+    } 
+    const { name, pincode, districtId } = req.body;
+
+    if (!name || !pincode || !districtId) {
+      return res.status(400).json({ message: "Name, pincode, and districtId are required" });
+    } 
+    // Check if district exists
+    const district = await District.findByPk(districtId);
+    if (!district) {
+      return res.status(404).json({ message: "District not found" });
+    }
+    const city = await City.create({ name, pincode, districtId });
+
+    res.status(201).json({ message: "City added successfully", city });
+  } catch (error) {
+    res.status(500).json({ message: "Error adding city", error: error.message });
+  }
+};
+
+// ✅ Get all States
+export const getAllStates = async (req, res) => {
+  try {
+    const states = await State.findAll();
+    res.json(states);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching states", error: error.message });
+  }
+};
+// ✅ Get all Districts

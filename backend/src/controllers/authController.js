@@ -4,14 +4,15 @@ import User from "../models/User.js";
 
 export const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password,phone,role } = req.body;
+    console.log("Registering user:", { name, email , phone, role });
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     // const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await User.create({ name, email, password });
+    const user = await User.create({ name, email, password ,phone, role });
 
     res.status(201).json({ message: "User registered", user });
   } catch (error) {

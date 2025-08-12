@@ -17,6 +17,10 @@ const User = sequelize.define("User", {
     unique: true,
     validate: { isEmail: true }
   },
+  phone: {
+    type: DataTypes.STRING(15),
+    allowNull: true,
+    validate: { isNumeric: true, len: [10, 15]  },},
   password: {
     type: DataTypes.STRING,
     allowNull: false
@@ -27,9 +31,9 @@ const User = sequelize.define("User", {
     },
   // new: role
   role: {
-    type: DataTypes.ENUM("admin", "coordinator", "trainer", "user"),
+    type: DataTypes.ENUM("admin", "coordinator", "trainer" ),
     allowNull: false,
-    defaultValue: "user"
+    defaultValue: "trainer"
   }
 }, 
 {

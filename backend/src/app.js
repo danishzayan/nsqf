@@ -2,7 +2,10 @@ import express from "express";
 import dotenv from "dotenv";
 import sequelize from "./config/db.js";
 import adminRoutes from "./routes/adminRoutes.js";
-import "./models/User.js";     // Load models
+import userRoutes from "./routes/userRoutes.js";
+
+// Load models
+import "./models/User.js";
 import "./models/State.js";
 import "./models/District.js";
 // import "./models/School.js";
@@ -14,12 +17,24 @@ const app = express();
 app.use(express.json());
 
 // Routes
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
 app.use("/api/admin", adminRoutes);
+app.use("/api/v1", userRoutes);
 
 // DB Connection
-sequelize.sync({ alter: true }) // alter for dev; use { force: false } in prod
-  .then(() => console.log("✅ Database synced"))
-  .catch(err => console.error("❌ DB sync error:", err));
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log("✅ DB connection successful");
+
+    await sequelize.sync({ alter: true });
+    console.log("✅ Database synced");
+  } catch (err) {
+    console.error("❌ DB connection failed:", err);
+  }
+})();
 
 // Server
 const PORT = process.env.PORT || 4000;
