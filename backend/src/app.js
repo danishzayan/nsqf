@@ -1,11 +1,11 @@
 import express from "express";
 import dotenv from "dotenv";
 import sequelize from "./config/db.js";
-import adminRoutes from "./routes/admin.routes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import "./models/User.js";     // Load models
 import "./models/State.js";
 import "./models/District.js";
-import "./models/School.js";
+// import "./models/School.js";
 
 dotenv.config();
 const app = express();
