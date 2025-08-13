@@ -1,6 +1,9 @@
-import { Trainer, User, SkillSchool } from '../models';
+// import Trainer  from '../models';
+import Trainer from '../models/Trainer.js';
+import User from '../models/User.js';
+import SkillSchool from '../models/SkillSchool.js';
 
-exports.getAllTrainers = async (req, res) => {
+export const getAllTrainers = async (req, res) => {
   try {
     const trainers = await Trainer.findAll({
       include: [
@@ -14,16 +17,29 @@ exports.getAllTrainers = async (req, res) => {
   }
 };
 
-exports.createTrainer = async (req, res) => {
+export const createTrainer = async (req, res) => {
   try {
-    const trainer = await Trainer.create(req.body);
+    // const trainer = await Trainer.create(req.body);
+    const { userId, schoolId, } = req.body;
+    // const user = await trainer.findOne(userId);
+    // if (user) {
+    //   return res.status(404).json({ message: "user" });
+    // }
+    if (!userId || !schoolId) {
+      return res.status(400).json({ message: "user_id and school_id are required" });
+    }
+    const trainer = await Trainer.create({
+      
+      user_id: userId,
+      school_id: schoolId
+    });
     res.status(201).json(trainer);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({  message:"Server error",error: err.message });
   }
 };
 // controllers/trainerController.js
-exports.uploadDoc = async (req, res) => {
+export const uploadDoc = async (req, res) => {
   try {
     const { doc_type } = req.body;
     const filePath = req.file.path;
@@ -41,6 +57,6 @@ exports.uploadDoc = async (req, res) => {
 
     res.status(200).json({ message: 'File uploaded successfully', filePath });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message:"Server error",error: error.message });
   }
 };
