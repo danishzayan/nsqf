@@ -28,8 +28,8 @@ const City = sequelize.define("City", {
 });
 
 // Relation
-City.belongsTo(District, { foreignKey: "districtId", as: "district" });
-District.hasMany(City, { foreignKey: "districtId", as: "cities" });
+// City.belongsTo(District, { foreignKey: "districtId", as: "district" });
+// District.hasMany(City, { foreignKey: "districtId", as: "cities" });
 ;
 
 export default City;

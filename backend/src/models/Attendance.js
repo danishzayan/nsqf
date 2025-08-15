@@ -3,6 +3,7 @@ import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 import Trainer from "./Trainer.js";
 import SkillSchool from "./SkillSchool.js";
+import User from "./User.js";
 
 const Attendance = sequelize.define("Attendance", {
   id: {
@@ -56,9 +57,9 @@ const Attendance = sequelize.define("Attendance", {
   timestamps: false
 });
 
-// ✅ Associations
-Attendance.belongsTo(Trainer, { foreignKey: "trainer_id", as: "trainer" });
-Trainer.hasMany(Attendance, { foreignKey: "trainer_id", as: "attendanceRecords" });
+// Attendance ⇄ User (store user.id in attendance.trainer_id)
+Attendance.belongsTo(User, { foreignKey: "trainer_id", as: "trainerUser" });
+User.hasMany(Attendance, { foreignKey: "trainer_id", as: "attendanceRecords" });
 
 Attendance.belongsTo(SkillSchool, { foreignKey: "school_id", as: "school" });
 SkillSchool.hasMany(Attendance, { foreignKey: "school_id", as: "attendance" });

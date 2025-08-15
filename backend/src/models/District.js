@@ -24,7 +24,7 @@ const District = sequelize.define("District", {
 });
 
 // Relations
-District.belongsTo(State, { foreignKey: "stateId", as: "state" });
-State.hasMany(District, { foreignKey: "stateId", as: "districts" });
+// District.belongsTo(State, { foreignKey: "stateId", as: "state" });
+// State.hasMany(District, { foreignKey: "stateId", as: "districts" });
 
 export default District;
