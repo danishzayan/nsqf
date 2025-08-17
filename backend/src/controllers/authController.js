@@ -27,26 +27,32 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-   console.log("Logging in user:", { email , password });
-    // const user = await User.findOne({ where: { email } });
+    console.log("Logging in user:", { email, password });
+
     const user = await User.findOne({
-  where: { email, isActive: true }
-});
-console.log("password", user.dataValues.password);
-console.log("user", user);
+      where: { email, isActive: true }
+    });
 
-if (!user || !user.isActive) {
-  return res.status(404).json({ message: "User not found or inactive" });
-}
+    if (!user || !user.isActive) {
+      return res.status(404).json({ message: "User not found or inactive" });
+    }
 
-    if(password !== user.dataValues.password) {
+    if (password !== user.dataValues.password) {
       return res.status(400).json({ message: "Incorrect password" });
     }
-    
 
-    const token = jwt.sign({ id: user.dataValues.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    // Add role to payload
+    const token = jwt.sign(
+      { id: user.dataValues.id, role: user.dataValues.role }, // role included
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
-    res.json({ message: "Login successful", token });
+    res.json({
+      message: "Login successful",
+      token,
+      role: user.dataValues.role // also return role explicitly
+    });
   } catch (error) {
     console.error("Login error:", error.message);
     res.status(500).json({ error: "server error" });

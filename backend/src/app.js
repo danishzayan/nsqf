@@ -6,6 +6,7 @@ import userRoutes from "./routes/userRoutes.js";
 import schoolRoutes from "./routes/schoolRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 import trainerRoutes from "./routes/trainerRoutes.js";
+import cors from "cors";
 // Load models
 import "./models/User.js";
 import "./models/State.js";
@@ -14,7 +15,7 @@ import "./models/District.js";
 
 dotenv.config();
 const app = express();
-
+app.use(cors());
 // Middleware
 app.use(express.json()); // ✅ parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // optional: for form data

@@ -14,14 +14,24 @@ const AddState = () => {
       return;
     }
 
-    try {   
+    try {
       setLoading(true);
+
+      // ✅ Get token from localStorage
+      const token = localStorage.getItem("token");
+
       const response = await axios.post(
         "http://localhost:3000/api/admin/state",
-        { stateName }
+        { stateName },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // send token
+          },
+        }
       );
-console.log("Response:", response);
-console.log("statename:", stateName);
+
+      console.log("Response:", response);
+      console.log("statename:", stateName);
 
       if (response.status === 201 || response.status === 200) {
         setSuccess(true);

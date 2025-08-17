@@ -14,14 +14,14 @@ const City = sequelize.define("City", {
     allowNull: false 
   },
 
-  pincode: { 
-    type: DataTypes.STRING(6), // Keep as string, not INTEGER
-    allowNull: true,           // Optional if not always required
-    validate: { 
-      isNumeric: true,         // Only digits allowed
-      len: [6, 6]              // Exactly 6 digits (India standard)
-    }
-  }
+  // pincode: { 
+  //   type: DataTypes.STRING(6), // Keep as string, not INTEGER
+  //   allowNull: true,           // Optional if not always required
+  //   validate: { 
+  //     isNumeric: true,         // Only digits allowed
+  //     len: [6, 6]              // Exactly 6 digits (India standard)
+  //   }
+  // }
 }, {
   tableName: "City",
   timestamps: true
