@@ -1,5 +1,5 @@
 import express from "express";
-import { addState, addDistrict,getDistrictsByState,getCitiesByDistrict,addCity ,getAllStates } from "../controllers/adminController.js";
+import { addState, addDistrict,getDistrictsByState,getCitiesByDistrict,addCity ,getAllStates ,searchCities} from "../controllers/adminController.js";
 import authMiddleware from "../middleware/auth.js";
 
 
@@ -12,6 +12,7 @@ router.post("/district",authMiddleware,  addDistrict);
 router.post("/city", authMiddleware, addCity); // Assuming you have an addCity function
 router.get("/states/:stateId/districts", getDistrictsByState);
 router.get("/districts/:districtId/cities", getCitiesByDistrict);
+router.get("/searchCities", searchCities);
 
 
 export default router;

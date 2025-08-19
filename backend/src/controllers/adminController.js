@@ -1,6 +1,8 @@
 import State from "../models/State.js";
 import District from "../models/District.js";
 import  City  from "../models/City.js";
+import { Op } from "sequelize";
+import User from "../models/User.js";
 
 // ✅ Add State
 export const addState = async (req, res) => {
@@ -205,21 +207,32 @@ export const getCitiesByDistrict = async (req, res) => {
   }
 };
 
-
-// ✅ Get all schools with full hierarchy
-export const getAllSchools = async (req, res) => {
+export const searchCities = async (req, res) => {
   try {
-    const schools = await School.findAll({
-      include: [
-        { model: State, as: "state", attributes: ["id", "name", "code"] },
-        { model: District, as: "district", attributes: ["id", "name", "pincode"] },
-        { model: City, as: "city", attributes: ["id", "name", "pincode"] }
-      ],
-      order: [["id", "ASC"]]
+    const { name } = req.query; // e.g. ?name=del
+    console.log("Searching cities with name:", name);
+    let whereCondition = {};
+    if (name) {
+      whereCondition.name = {
+        [Op.like]: `%${name}%`, // partial match
+      };
+    }
+
+    const cities = await City.findAll({
+      where: whereCondition,
+      attributes: ["id", "name"], // ✅ include id also
     });
 
-    res.json(schools);
+    res.json({
+      success: true,
+      data: cities,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching schools", error: error.message });
+    console.error("Error searching cities:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to search cities",
+    });
   }
 };
+

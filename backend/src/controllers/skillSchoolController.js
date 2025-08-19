@@ -1,4 +1,5 @@
 import SkillSchool from "../models/SkillSchool.js";
+import { Op } from "sequelize";
 
 export const getAllSkillSchools = async (req, res) => {
   try {
@@ -7,7 +8,26 @@ export const getAllSkillSchools = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
+export const searchSkillSchools = async (req, res) => {
+  try {
+    const { name } = req.query; // e.g. ?name=schoolName
+    console.log("Searching skill schools with name:", name);  
+    let whereCondition = {};
+    if (name) {
+      whereCondition.schoolName = {
+        [Op.like]: `%${name}%`, // partial match
+      };
+    }
+    const skillSchools = await SkillSchool.findAll({
+      where: whereCondition,
+      attributes: ["id", "schoolName"],
+    });
+    res.json(skillSchools);
+  }
+  catch (error) {
+    res.status(500).json({ message: "Error fetching skill schools", error: error.message });
+  }
+  };
 export const createSkillSchool = async (req, res) => {
   try {
     const { schoolName, address, cities_id, latitude, longitude } = req.body;
@@ -25,7 +45,9 @@ export const createSkillSchool = async (req, res) => {
       longitude
     });
 
-    res.status(201).json(school);
+    res.status(201).json(
+      { success: true, school }
+      );
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -153,3 +175,4 @@ export const getSchoolsByState = async (req, res) => {
     res.status(500).json({ message: "Error fetching schools", error: error.message });
   }
 };
+

@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-
+import { Op } from "sequelize";
 export const register = async (req, res) => {
   try {
     const { name, email, password,phone,role } = req.body;
@@ -59,4 +59,39 @@ export const login = async (req, res) => {
   }
 };
 
+ export const searchTrainers = async (req, res) => {
+  try {
+    const { name } = req.query; // e.g. ?name=trainerName
+    console.log("Searching trainers with name:", name);
 
+    let whereCondition = {
+      role: "trainer", // ✅ filter only trainers
+    };
+
+    if (name) {
+      whereCondition.name = {
+        [Op.like]: `%${name}%`, // partial match
+      };
+    }
+
+    const trainers = await User.findAll({
+      where: whereCondition,
+      attributes: ["id", "name"], // return id & name
+    });
+
+    if (!trainers || trainers.length === 0) {
+      return res.status(404).json({ message: "No trainers found" });
+    }
+
+    res.json({
+      success: true,
+      data: trainers,
+    });
+  } catch (error) {
+    console.error("Error searching trainers:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to search trainers",
+    });
+  }
+};
