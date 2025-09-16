@@ -1,12 +1,19 @@
-import { DataTypes } from "sequelize";
-import sequelize from "../config/db.js";
+import mongoose, { Schema } from 'mongoose';
 
-const State = sequelize.define("State", {
-  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  stateName: { type: DataTypes.STRING(100), allowNull: false, unique: true }
-}, {
-  tableName: "states",
-  timestamps: true
-});
+const stateSchema = new Schema({
+    name: {
+        type: String,
+        required: true
+    },
+    companyId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Company',
+        required: true
+    }
+}, { timestamps: true });
 
-export default State;
+// Ensure a state name is unique within a company
+stateSchema.index({ name: 1, companyId: 1 }, { unique: true });
+
+export default mongoose.model('State', stateSchema);
+

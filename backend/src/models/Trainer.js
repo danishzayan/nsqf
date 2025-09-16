@@ -1,48 +1,38 @@
-// src/models/Trainer.js
-import { DataTypes } from "sequelize";
-import sequelize from "../config/db.js";
+import mongoose from 'mongoose';
+const { Schema } = mongoose;
 
-const Trainer = sequelize.define("Trainer", {
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true
-  },
-  user_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
-  school_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
-  coordinator_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true
-  },
-  pan_doc: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  bank_account: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  ifsc_code: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  doc_status: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  status: {
-    type: DataTypes.STRING,
-    allowNull: true
-  }
-}, {
-  tableName: "trainers",
-  timestamps: false
-});
+const trainerSchema = new Schema(
+  {
+    companyId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Company',
+      required: true,
+    },
+    schoolId: {
+      type: Schema.Types.ObjectId,
+      ref: 'School',
+      required: true,
+    },
+    tradeId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Trade',
+      required: true,
+    },
 
+    // Personal information (flattened)
+    fullName: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    phone: { type: String, required: true },
+    password: { type: String, required: true }, // plain text password as per your setup
+
+    status: {
+      type: String,
+      enum: ['active', 'inactive', 'on_leave'],
+      default: 'active',
+    },
+  },
+  { timestamps: true }
+);
+
+const Trainer = mongoose.model('Trainer', trainerSchema);
 export default Trainer;

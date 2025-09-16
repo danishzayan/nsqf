@@ -18,7 +18,7 @@ const Sidebar = ({ role }) => {
   const [active, setActive] = useState("");
 
   const menus = {
-    admin: [
+    CompanyAdmin: [
       { name: "Dashboard", icon: <FaTachometerAlt />, path: "/dashboard" },
       { name: "Hierarchy", icon: <FaSitemap />, path: "/hierarchy" },
       { name: "Add School", icon: <FaSchool />, path: "/add-school" },

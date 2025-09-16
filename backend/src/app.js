@@ -1,74 +1,48 @@
-// server.js
 import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
-import sequelize from "./config/db.js";
-
-// Load models
-import "./models/User.js";
-import "./models/State.js";
-import "./models/District.js";
-// import "./models/School.js";
-
-// Load routes
-import adminRoutes from "./routes/adminRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import schoolRoutes from "./routes/schoolRoutes.js";
-import attendanceRoutes from "./routes/attendanceRoutes.js";
-import trainerRoutes from "./routes/trainerRoutes.js";
-
+import connectDB from "./config/db.js";
+import companyRoutes from './routes/CompanyRoutes.js';
+import superadminRoutes from './routes/SuperadminRoutes.js';
+import companyAdminRoutes from './routes/CompanyAdminRoutes.js';
+import managementRoutes from './routes/managementRoutes.js';
+import dotenv from "dotenv";
 dotenv.config();
+// Import routes
+// import tradeRoutes from "./routes/tradeRoutes.js";
+
+// Initialize express app
 
 const app = express();
 
-// Middleware
-app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:3000"],
-  credentials: true,
-  methods: ["GET","POST","PUT","DELETE","OPTIONS"]
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json()); // parses application/json
+app.use(express.urlencoded({ extended: true })); // parses form-data (optional)
 
-// Test route
+// Connect to MongoDB
+ await connectDB();
+// Middlewares
+app.use(cors()); // Enable Cross-Origin Resource Sharing
+app.use(express.json()); // To parse JSON bodies
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
+});
+app.use(cors()); // Enable Cross-Origin Resource Sharing
+app.use(express.json()); // To parse JSON bodies
+
+
+// API Routes
+// Define Routes
+app.use('/api', companyRoutes);
+app.use('/api/superadmins', superadminRoutes);
+app.use('/api/companyadmins', companyAdminRoutes);
+app.use('/api/management', managementRoutes);
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// Mount routes
-app.use("/api/admin", adminRoutes);
-app.use("/api/v1", userRoutes);
-app.use("/api/trainer", trainerRoutes);
-app.use("/api/schools", schoolRoutes);
-app.use("/api/attendance", attendanceRoutes);
+// Mount the trade routes
+// app.use("/api/trades", tradeRoutes);
 
-// Async server startup
-const startServer = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log("✅ DB connection successful");
-
-    await sequelize.sync({ alter: false });
-    console.log("✅ Database synced");
-
-    const PORT = process.env.PORT || 4000;
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-    });
-
-  } catch (err) {
-    console.error("❌ Server failed to start:", err);
-    process.exit(1);
-  }
-};
-
-startServer();
-
-// Catch unhandled rejections & exceptions
-process.on("unhandledRejection", (err) => {
-  console.error("❌ Unhandled Rejection:", err);
-});
-process.on("uncaughtException", (err) => {
-  console.error("❌ Uncaught Exception:", err);
-  process.exit(1);
-});
+export default app;

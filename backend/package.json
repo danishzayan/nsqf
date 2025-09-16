@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    
     "start": "nodemon src/app.js"
   },
   "keywords": [],
@@ -21,6 +20,7 @@
     "joi": "^18.0.0",
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
+    "mongoose": "^8.18.0",
     "multer": "^2.0.2",
     "mysql2": "^3.14.3",
     "sequelize": "^6.37.7",

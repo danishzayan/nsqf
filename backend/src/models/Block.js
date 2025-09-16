@@ -1,13 +1,17 @@
 import mongoose, { Schema } from 'mongoose';
 
-const districtSchema = new Schema({
+const blockSchema = new Schema({
     name: {
         type: String,
         required: true
     },
-    stateId: {
+    districtId: {
         type: Schema.Types.ObjectId,
-        ref: 'State',
+        ref: 'District',
+        required: true
+    },
+    pincode:{
+         type: String,
         required: true
     },
     companyId: {
@@ -17,8 +21,8 @@ const districtSchema = new Schema({
     }
 }, { timestamps: true });
 
-// Ensure a district name is unique within a state
-districtSchema.index({ name: 1, stateId: 1 }, { unique: true });
+// Ensure a block name is unique within a district
+blockSchema.index({ name: 1, districtId: 1 }, { unique: true });
 
-export default mongoose.model('District', districtSchema);
+export default mongoose.model('Block', blockSchema);
 

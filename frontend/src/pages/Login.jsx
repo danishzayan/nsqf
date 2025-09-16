@@ -17,14 +17,17 @@ const Login = ({ setRole }) => {
 
   const handleLogin = async () => {
     try {
-      const res = await axios.post("http://localhost:3000/api/v1/login", {
+      const res = await axios.post("http://localhost:3000/api/companyadmins/login", {
         email,
         password,
       });
 
       // Axios automatically parses JSON
-      console.log("Login response:", res.data);
-      const { token, role } = res.data;
+      console.log("Login response:", res.user);
+      console.log("Response data:", res.data.user.role);
+      const token = res.data.token;
+      const role = res.data.user.role;
+      // const { token, role } = res.data;
       if (!token || !role) {
         setError("⚠ Invalid response from server");
         return;
