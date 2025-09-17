@@ -19,11 +19,11 @@ router.post('/login', loginCompanyAdmin);
 
 // --- Location Management Routes ---
 // These routes would ideally be protected by middleware to ensure the user is an authenticated CompanyAdmin
-router.post('/states', createState);
-router.post('/districts', createDistrict);
-router.post('/blocks', createBlock);
-router.get('/getStates',protectCompanyAdmin, getStatesByCompany);
-router.get('/getDistricts',protectCompanyAdmin, getDistrictsByCompany);
-router.get('/getBlocks',protectCompanyAdmin, getBlocksByCompany);
+router.post('/states', protectCompanyAdmin, createState);
+router.post('/districts', protectCompanyAdmin, createDistrict);
+router.post('/blocks', protectCompanyAdmin, createBlock);
+router.get('/getStates', protectCompanyAdmin, getStatesByCompany);
+router.get('/getDistricts', protectCompanyAdmin, getDistrictsByCompany);
+router.get('/getBlocks', protectCompanyAdmin, getBlocksByCompany);
 
 export default router;
