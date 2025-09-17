@@ -8,11 +8,11 @@ const schoolTradeSchema = new Schema({
         ref: 'School',
         required: true
     },
-    tradeId: {
+    tradeId: [{
         type: Schema.Types.ObjectId,
         ref: 'Trade',
         required: true
-    },
+    }],
     assignedDate: {
         type: Date,
         default: Date.now

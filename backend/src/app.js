@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import connectDB from "./config/db.js";
-import companyRoutes from './routes/CompanyRoutes.js';
+// import companyRoutes from './routes/CompanyRoutes.js';
 import superadminRoutes from './routes/SuperadminRoutes.js';
 import companyAdminRoutes from './routes/CompanyAdminRoutes.js';
 import managementRoutes from './routes/managementRoutes.js';
@@ -34,7 +34,7 @@ app.use(express.json()); // To parse JSON bodies
 
 // API Routes
 // Define Routes
-app.use('/api', companyRoutes);
+// app.use('/api', companyRoutes);
 app.use('/api/superadmins', superadminRoutes);
 app.use('/api/companyadmins', companyAdminRoutes);
 app.use('/api/management', managementRoutes);

@@ -13,9 +13,20 @@ const schoolSchema = new Schema({
         unique: true,
         trim: true
     },
-    location: { // As per diagram: GeoLocation. Storing as a simple string for now.
+    location: {
+        type: {
+            type: String,
+            enum: ['Point'], // 'location.type' must be 'Point'
+            required: true
+        },
+        coordinates: {
+            type: [Number], // Array of numbers for [longitude, latitude]
+            required: true
+        }
+    },
+    address: {
         type: String,
-        required: true
+        required: true,
     },
     blockId: {
         type: Schema.Types.ObjectId,

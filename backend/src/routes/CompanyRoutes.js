@@ -1,11 +1,11 @@
-import express from 'express';
-import * as companyController from '../controllers/companyController.js';
+// import express from 'express';
+// import * as companyController from '../controllers/companyController.js';
 
-const router = express.Router();
+// const router = express.Router();
 
-// Company routes
-router.post('/companies', companyController.createCompany);
-router.get('/companies', companyController.getAllCompanies);
+// // Company routes
+// router.post('/companies', companyController.createCompany);
+// router.get('/companies', companyController.getAllCompanies);
 
 // // State routes
 // router.post('/states', companyController.createState);
@@ -19,5 +19,5 @@ router.get('/companies', companyController.getAllCompanies);
 // router.post('/blocks', companyController.createBlock);
 // router.get('/districts/:districtId/blocks', companyController.getBlocksByDistrict);
 
-export default router;
+// export default router;
 
