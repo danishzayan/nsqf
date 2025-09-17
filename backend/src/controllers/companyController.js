@@ -1,28 +1,28 @@
-import Company from '../models/Company.js';
-import State from '../models/State.js';
-import District from '../models/District.js';
-import Block from '../models/Block.js';
+// import Company from '../models/Company.js';
+// import State from '../models/State.js';
+// import District from '../models/District.js';
+// import Block from '../models/Block.js';
 
 // --- Company Controllers ---
-export const createCompany = async (req, res) => {
-    try {
-        const company = new Company(req.body);
-        console.log("Creating company:", req.body);
-        await company.save();
-        res.status(201).send(company);
-    } catch (error) {
-        res.status(400).send(error);
-    }
-};
+// export const createCompany = async (req, res) => {
+//     try {
+//         const company = new Company(req.body);
+//         console.log("Creating company:", req.body);
+//         await company.save();
+//         res.status(201).send(company);
+//     } catch (error) {
+//         res.status(400).send(error);
+//     }
+// };
 
-export const getAllCompanies = async (req, res) => {
-    try {
-        const companies = await Company.find({});
-        res.status(200).send(companies);
-    } catch (error) {
-        res.status(500).send(error);
-    }
-};
+// export const getAllCompanies = async (req, res) => {
+//     try {
+//         const companies = await Company.find({});
+//         res.status(200).send(companies);
+//     } catch (error) {
+//         res.status(500).send(error);
+//     }
+// };
 
 
 // // --- State Controllers ---

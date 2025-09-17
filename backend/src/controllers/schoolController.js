@@ -12,12 +12,12 @@ import SchoolTrade from '../models/SchoolTrade.js';
 export const createSchool = async (req, res) => {
     console.log("Request to create school received");
     try {
-        const {name,location, blockId } = req.body;
+        const {name,location, blockId,uid,address,tradeId } = req.body;
         console.log("Creating school with data:", req.body);
          
         const companyId = req.user.companyId; // From auth middleware
        
-        const school = new School({ name, location, blockId, companyId });
+        const school = new School({ name, location, blockId,uid, companyId ,address,tradeId});
         await school.save();
         res.status(201).json(school);
     } catch (error) {
@@ -153,7 +153,7 @@ export const assignTradeToSchool = async (req, res) => {
  */
 export const createTrainer = async (req, res) => {
   try {
-    const { schoolId, tradeId, fullName, email, phone, password, status ,uid } = req.body;
+    const { schoolId,location, tradeId, fullName, email, phone, password, status ,uid } = req.body;
     const companyId = req.user.companyId; // from middleware
 
     // Verify the school belongs to the admin's company
@@ -167,6 +167,7 @@ export const createTrainer = async (req, res) => {
     const trainer = new Trainer({
       companyId,  // ✅ include companyId
       schoolId,
+      location,
       tradeId,
       fullName,
       email,
