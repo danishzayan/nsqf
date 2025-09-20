@@ -273,4 +273,4 @@ export const createSchoolWithMultipleTrainers = async (req, res) => {
         // Always end the session.
         session.endSession();
     }
-};
+};   
