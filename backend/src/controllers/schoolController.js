@@ -2,6 +2,7 @@ import School from '../models/School.js';
 import Trade from '../models/Trade.js';
 import Trainer from '../models/Trainer.js';
 import SchoolTrade from '../models/SchoolTrade.js';
+import mongoose from 'mongoose';
 
 // --- School Management ---
 
@@ -153,9 +154,9 @@ export const assignTradeToSchool = async (req, res) => {
  */
 export const createTrainer = async (req, res) => {
   try {
-    const { schoolId,location, tradeId, fullName, email, phone, password, status ,uid } = req.body;
+    const { schoolId,location, tradeId, fullName, email, phone, password, status  } = req.body;
     const companyId = req.user.companyId; // from middleware
-
+   console.log(req.body);
     // Verify the school belongs to the admin's company
     const school = await School.findOne({ _id: schoolId, companyId });
     if (!school) {
@@ -174,7 +175,7 @@ export const createTrainer = async (req, res) => {
       phone,
       password,
       status,
-      uid
+      // uid
     });
 
     await trainer.save();
@@ -208,4 +209,68 @@ export const loginTrainer = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Server error during login", error: error.message });
   }
+};
+
+export const createSchoolWithMultipleTrainers = async (req, res) => {
+    // Start a session for the transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const { name, location, blockId, uid, address, trainers } = req.body;
+        const companyId = req.user.companyId;
+
+        // Basic validation
+        if (!trainers || trainers.length === 0) {
+            throw new Error("At least one trainer is required to create a school.");
+        }
+
+        // STEP 1: Extract all unique trade IDs from the incoming trainers array.
+        // Using a Set automatically handles duplicates.
+        const tradeIds = [...new Set(trainers.map(trainer => trainer.tradeId))];
+
+        // STEP 2: Create the school document with the collected trade IDs.
+        const school = new School({
+            name,
+            location,
+            blockId,
+            uid,
+            address,
+            companyId,
+            tradeIds // Assign the array of trade IDs
+        });
+        const savedSchool = await school.save({ session });
+        const schoolId = savedSchool._id; // Get the ID for the trainers
+
+        // STEP 3: Prepare the trainer documents.
+        // Add the new schoolId and the companyId to each trainer object.
+        const trainersToCreate = trainers.map(trainer => ({
+            ...trainer,
+            schoolId: schoolId, // Link to the newly created school
+            companyId: companyId,
+            // location: location // Assuming trainers are at the school's location
+        }));
+
+        // STEP 4: Insert all trainer documents in a single, efficient operation.
+        const savedTrainers = await Trainer.insertMany(trainersToCreate, { session });
+
+        // If we reach here, both school and trainers were saved successfully.
+        // Commit the transaction to make the changes permanent.
+        await session.commitTransaction();
+
+        res.status(201).json({
+            message: "School and all trainers created successfully!",
+            school: savedSchool,
+            trainers: savedTrainers,
+        });
+
+    } catch (error) {
+        // If any error occurred at any step, abort the entire transaction.
+        // No changes will be saved to the database.
+        await session.abortTransaction();
+        res.status(500).json({ message: 'Transaction failed', error: error.message });
+    } finally {
+        // Always end the session.
+        session.endSession();
+    }
 };

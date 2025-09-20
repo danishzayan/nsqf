@@ -18,17 +18,17 @@ const trainerSchema = new Schema(
       ref: 'Trade',
       required: true,
     },
-   location: {
-        type: {
-            type: String,
-            enum: ['Point'], // 'location.type' must be 'Point'
-            required: true
-        },
-        coordinates: {
-            type: [Number], // Array of numbers for [longitude, latitude]
-            required: true
-        }
-    },
+  //  location: {
+  //       type: {
+  //           type: String,
+  //           enum: ['Point'], // 'location.type' must be 'Point'
+  //           required: true
+  //       },
+  //       coordinates: {
+  //           type: [Number], // Array of numbers for [longitude, latitude]
+  //           required: true
+  //       }
+  //   },
     // Personal information (flattened)
     fullName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
