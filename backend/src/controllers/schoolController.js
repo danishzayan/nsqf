@@ -273,4 +273,81 @@ export const createSchoolWithMultipleTrainers = async (req, res) => {
         // Always end the session.
         session.endSession();
     }
-};   
+};
+
+export const getSchoolsWithDetails = async (req, res) => {
+    try {
+        // 1. Get IDs from request
+        const { blockId } = req.query; // Changed from req.params to req.query
+        const { companyId } = req.user; // From your authentication middleware
+
+        // Validate input
+        if (!blockId) {
+            return res.status(400).json({ message: 'Block ID is required.' });
+        }
+
+        // 2. Define the Aggregation Pipeline
+        const pipeline = [
+            // STAGE 1: Filter schools by companyId and blockId.
+            // This is the most important step for performance.
+            {
+                $match: {
+                    companyId: new mongoose.Types.ObjectId(companyId),
+                    blockId: new mongoose.Types.ObjectId(blockId)
+                }
+            },
+            // STAGE 2: Join with the 'trainers' collection.
+            {
+                $lookup: {
+                    from: 'trainers',       // The collection to join with
+                    localField: '_id',          // Field from the 'schools' collection
+                    foreignField: 'schoolId', // Field from the 'trainers' collection
+                    as: 'trainers'          // Name for the new array field
+                }
+            },
+            // STAGE 3: Join with the 'trades' collection.
+            {
+                $lookup: {
+                    from: 'trades',
+                    localField: 'tradeIds', // Field from the 'schools' collection (array)
+                    foreignField: '_id',      // Field from the 'trades' collection
+                    as: 'trades'
+                }
+            },
+            // STAGE 4: Shape the final output.
+            // We only want specific fields, not the entire documents.
+            {
+                $project: {
+                    _id: 1, // Keep the school ID
+                    name: 1,  // Keep the school name
+                    // Transform the trades array to be an array of names
+                    trades: {
+                        $map: {
+                            input: '$trades',
+                            as: 'trade',
+                            in: '$$trade.name'
+                        }
+                    },
+                    // Transform the trainers array to be an array of names
+                    trainers: {
+                        $map: {
+                            input: '$trainers',
+                            as: 'trainer',
+                            in: '$$trainer.fullName'
+                        }
+                    }
+                }
+            }
+        ];
+
+        // 3. Execute the pipeline
+        const schools = await School.aggregate(pipeline);
+        if (!schools || schools.length === 0) {
+            return res.status(404).json({ message: 'No schools found for the given block and company.' });
+        }
+        res.status(200).json(schools);
+
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching school details', error: error.message });
+    }
+};

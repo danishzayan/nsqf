@@ -7,8 +7,8 @@ import {
     assignTradeToSchool,
     createTrainer,
     loginTrainer,
-    createSchoolWithMultipleTrainers
-
+    createSchoolWithMultipleTrainers,
+    getSchoolsWithDetails
 } from '../controllers/schoolController.js';
 import { protectCompanyAdmin } from '../middleware/authenticationMiddleware.js';
 
@@ -30,6 +30,7 @@ router.post('/schools/assign-trade', protectCompanyAdmin, assignTradeToSchool);
 // --- Trainer Routes (Protected) ---
 router.post('/trainers', protectCompanyAdmin, createTrainer);
 router.post('/schools/create-with-trainers', protectCompanyAdmin, createSchoolWithMultipleTrainers);
+router.get('/schools/details', protectCompanyAdmin, getSchoolsWithDetails);
 router.post('/trainers/login', loginTrainer);
 
 export default router;
