@@ -37,9 +37,13 @@ const trainerSchema = new Schema(
    
     status: {
       type: String,
-      enum: ['active', 'inactive', 'on_leave'],
+      enum: ['active', 'inactive', ],
       default: 'active',
     },
+       coordinatorId: {
+        type: Schema.Types.ObjectId,
+        ref: 'StateCoordinator' // Must match the model name of your coordinator
+    }
   },
   { timestamps: true }
 );
