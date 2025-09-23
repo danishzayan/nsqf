@@ -90,6 +90,7 @@ export const createState = async (req, res) => {
         await state.save();
         res.status(201).send(state);
     } catch (error) {
+        console.log(error)
         res.status(400).send(error);
     }
 };
