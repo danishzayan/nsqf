@@ -6,7 +6,7 @@ import StateCoordinator from '../models/StateLevelVc.js'; // Make sure the path 
 
 import jwt from 'jsonwebtoken';
 
-const generateToken = (id, companyId) => {
+  export const   generateToken = (id, companyId) => {
     return jwt.sign({ id, companyId }, process.env.JWT_SECRET, {
         expiresIn: '30d', // Token expires in 30 days
     });

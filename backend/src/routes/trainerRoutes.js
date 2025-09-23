@@ -2,7 +2,7 @@
 import express from 'express';
 // import upload from '../config/multerConfig.js';
 import { markDailyStatus,checkOut } from '../controllers/trainerController.js';
-import { authMiddleware } from '../middleware/auth.js';
+import  authMiddleware  from '../middleware/auth.js';
 
 const router = express.Router();
 

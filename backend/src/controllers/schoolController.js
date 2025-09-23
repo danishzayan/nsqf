@@ -3,9 +3,16 @@ import Trade from '../models/Trade.js';
 import Trainer from '../models/Trainer.js';
 import SchoolTrade from '../models/SchoolTrade.js';
 import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
 
 // --- School Management ---
 
+
+const generateToken = (id, companyId) => {
+    return jwt.sign({ id, companyId }, process.env.JWT_SECRET, {
+        expiresIn: '30d', // Token expires in 30 days
+    });
+}
 /**
  * @description Create a new school for the admin's company
  * @route POST /api/management/schools
@@ -201,10 +208,12 @@ export const loginTrainer = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials." });
     }
     const trainerResponse = { ...trainer.toObject() };
+    const token = generateToken(trainer._id, trainer.companyId);
     delete trainerResponse.password; // ✅ correct field to hide
     res.status(200).json({
       message: "Login successful",
       user: trainerResponse,
+      token,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error during login", error: error.message });

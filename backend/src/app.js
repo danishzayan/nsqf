@@ -5,6 +5,7 @@ import connectDB from "./config/db.js";
 import superadminRoutes from './routes/SuperadminRoutes.js';
 import companyAdminRoutes from './routes/CompanyAdminRoutes.js';
 import managementRoutes from './routes/managementRoutes.js';
+import trainerRoutes from './routes/trainerRoutes.js';
 import dotenv from "dotenv";
 dotenv.config();
 // Import routes
@@ -38,6 +39,8 @@ app.use(express.json()); // To parse JSON bodies
 app.use('/api/superadmins', superadminRoutes);
 app.use('/api/companyadmins', companyAdminRoutes);
 app.use('/api/management', managementRoutes);
+app.use('/api/trainers', trainerRoutes);
+
 app.get("/", (req, res) => {
   res.send("API is running...");
 });

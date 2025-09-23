@@ -87,21 +87,20 @@
 // controllers/attendanceController.js
 import School from '../models/School.js';
 import Trainer from '../models/Trainer.js';
-import Student from '../models/Student.js';
-import Attendance from '../models/Attendance.js';
+// import Student from '../models/Student.js';
+import TrainerAttendance from '../models/Attendance.js';
 import { getDistance } from 'geolib';
 // controllers/trainerAttendanceController.js
-import Trainer from '../models/Trainer.js';
-import TrainerAttendance from '../models/TrainerAttendance.js';
-import School from '../models/School.js';
-import { getDistance } from 'geolib';
+// import Trainer from '../models/Trainer.js';
+// import TrainerAttendance from '../models/TrainerAttendance.js';
 
 export const markDailyStatus = async (req, res) => {
     try {
         // Destructure date from the request body
         const { status, latitude, longitude, date } = req.body;
         const { id: trainerId } = req.user;
-
+        console.log('Trainer ID:', trainerId);
+        // console.log('Request Body:', req.body);
         // Use the provided date or default to the current date
         const attendanceDate = date ? new Date(date) : new Date();
         const startOfDay = new Date(attendanceDate.setHours(0, 0, 0, 0));

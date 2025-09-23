@@ -11,7 +11,7 @@ import {
     getSchoolsWithDetails
 } from '../controllers/schoolController.js';
 import { protectCompanyAdmin } from '../middleware/authenticationMiddleware.js';
-
+import authMiddleware from '../middleware/auth.js';
 const router = express.Router();
 
 // --- School Routes (Protected) ---
