@@ -179,51 +179,71 @@ export const getAllByCompany = async (req, res) => {
         const companyId = req.user.companyId;
 
         const stateWiseDistribution = await State.aggregate([
-            // Stage 1: Find all states that match the company ID.
+            // Stage 1: Find states for the company.
             {
                 $match: { companyId: new mongoose.Types.ObjectId(companyId) }
             },
             
-            // Stage 2: Look up all districts belonging to each state.
+            // Stage 2: Look up districts in those states.
             {
                 $lookup: {
-                    from: 'districts', // The collection name for the District model
+                    from: 'districts',
                     localField: '_id',
                     foreignField: 'stateId',
                     as: 'districts'
                 }
             },
             
-            // Stage 3: Look up all blocks belonging to the districts we just found.
+            // Stage 3: Look up blocks in those districts.
             {
                 $lookup: {
-                    from: 'blocks', // The collection name for the Block model
-                    localField: 'districts._id', // Use the IDs from the districts found in the previous stage
+                    from: 'blocks',
+                    localField: 'districts._id',
                     foreignField: 'districtId',
                     as: 'blocks'
                 }
             },
 
-            // Stage 4: Look up all schools belonging to the blocks we just found.
+            // Stage 4: Look up schools in those blocks.
             {
                 $lookup: {
-                    from: 'schools', // The collection name for the School model
-                    localField: 'blocks._id', // Use the IDs from the blocks found in the previous stage
+                    from: 'schools',
+                    localField: 'blocks._id',
                     foreignField: 'blockId',
                     as: 'schools'
                 }
             },
 
-            // Stage 5: Create new fields for the counts of each array.
+            // NEW - Stage 5: Look up all trainers belonging to the schools we just found.
+            {
+                $lookup: {
+                    from: 'trainers', // The collection name for your Trainer model
+                    localField: 'schools._id',
+                    foreignField: 'schoolId',
+                    as: 'trainers'
+                }
+            },
+
+            // Stage 6: Create new fields for all counts.
             {
                 $addFields: {
                     districtCount: { $size: '$districts' },
                     blockCount: { $size: '$blocks' },
-                    schoolCount: { $size: '$schools' }
+                    schoolCount: { $size: '$schools' },
+                    tradeCount: {
+                        $sum: {
+                            $map: {
+                                input: "$schools",
+                                as: "school",
+                                in: { $size: "$$school.trades" }
+                            }
+                        }
+                    },
+                    trainerCount: { $size: '$trainers' } // NEW: Count the trainers found
                 }
             },
 
-            // Stage 6: Project only the fields we need for the final response.
+            // Stage 7: Project only the fields we need.
             {
                 $project: {
                     _id: 1,
@@ -231,9 +251,12 @@ export const getAllByCompany = async (req, res) => {
                     districtCount: 1,
                     blockCount: 1,
                     schoolCount: 1,
+                    tradeCount: 1,
+                    trainerCount: 1, // NEW: Include trainerCount in the final output
                 }
             },
-            // Optional: Sort by state name alphabetically
+            
+            // Stage 8: Sort by state name.
             {
                 $sort: { name: 1 }
             }

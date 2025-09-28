@@ -252,7 +252,7 @@ export const createSchoolWithMultipleTrainers = async (req, res) => {
         // STEP 1: Extract all unique trade IDs from the incoming trainers array.
         // Using a Set automatically handles duplicates.
         const tradeIds = [...new Set(trainers.map(trainer => trainer.tradeId))];
-
+         console.log("Unique Trade IDs:", tradeIds);
         // STEP 2: Create the school document with the collected trade IDs.
         const school = new School({
             name,
