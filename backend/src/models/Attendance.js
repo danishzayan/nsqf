@@ -1,9 +1,7 @@
-// models/Attendance.js
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 const attendanceSchema = new Schema({
-    // studentId: { type: Schema.Types.ObjectId, ref: 'Student', required: true },
     schoolId: { type: Schema.Types.ObjectId, ref: 'School', required: true },
     trainerId: { type: Schema.Types.ObjectId, ref: 'Trainer', required: true },
     status: {
@@ -15,18 +13,19 @@ const attendanceSchema = new Schema({
         type: Date,
         default: Date.now
     },
-     checkInTime: { type: Date },
+    checkInTime: { type: Date },
     checkOutTime: { type: Date },
-    // Store the location where attendance was marked
-    markedLocation: {
+    // NEW FIELD: To store the total work duration in minutes.
+    totalMinutesWorked: { 
+        type: Number 
+    },
+    checkOutLocation: { // I noticed you have this in your controller, so I've added it to the schema
         type: {
             type: String,
             enum: ['Point'],
-            // required: true
         },
         coordinates: {
             type: [Number], // [longitude, latitude]
-            // required: true
         }
     }
 }, { timestamps: true });
