@@ -3,7 +3,7 @@ import State from '../models/State.js';
 import District from '../models/District.js';
 import Block from '../models/Block.js';
 import StateCoordinator from '../models/StateLevelVc.js'; // Make sure the path to your model is correct
-
+import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 
   export const   generateToken = (id, companyId) => {
@@ -173,6 +173,83 @@ export const getDistrictsByCompany = async (req, res) => {
         res.status(500).json({ message: 'Error fetching districts', error: error.message });
     }
 };
+
+export const getAllByCompany = async (req, res) => {
+    try {
+        const companyId = req.user.companyId;
+
+        const stateWiseDistribution = await State.aggregate([
+            // Stage 1: Find all states that match the company ID.
+            {
+                $match: { companyId: new mongoose.Types.ObjectId(companyId) }
+            },
+            
+            // Stage 2: Look up all districts belonging to each state.
+            {
+                $lookup: {
+                    from: 'districts', // The collection name for the District model
+                    localField: '_id',
+                    foreignField: 'stateId',
+                    as: 'districts'
+                }
+            },
+            
+            // Stage 3: Look up all blocks belonging to the districts we just found.
+            {
+                $lookup: {
+                    from: 'blocks', // The collection name for the Block model
+                    localField: 'districts._id', // Use the IDs from the districts found in the previous stage
+                    foreignField: 'districtId',
+                    as: 'blocks'
+                }
+            },
+
+            // Stage 4: Look up all schools belonging to the blocks we just found.
+            {
+                $lookup: {
+                    from: 'schools', // The collection name for the School model
+                    localField: 'blocks._id', // Use the IDs from the blocks found in the previous stage
+                    foreignField: 'blockId',
+                    as: 'schools'
+                }
+            },
+
+            // Stage 5: Create new fields for the counts of each array.
+            {
+                $addFields: {
+                    districtCount: { $size: '$districts' },
+                    blockCount: { $size: '$blocks' },
+                    schoolCount: { $size: '$schools' }
+                }
+            },
+
+            // Stage 6: Project only the fields we need for the final response.
+            {
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    districtCount: 1,
+                    blockCount: 1,
+                    schoolCount: 1,
+                }
+            },
+            // Optional: Sort by state name alphabetically
+            {
+                $sort: { name: 1 }
+            }
+        ]);
+
+        if (!stateWiseDistribution || stateWiseDistribution.length === 0) {
+            return res.status(404).json({ message: 'No state-wise data found for this company.' });
+        }
+        
+        res.status(200).json(stateWiseDistribution);
+
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching state-wise distribution', error: error.message });
+    }
+};
+
 
 /**
  * @description Get all blocks for the authenticated admin's company

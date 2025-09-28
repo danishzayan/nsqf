@@ -11,9 +11,10 @@ import {
     registerStateCoordinator,
     assignToCoordinator,
     coordinatorLogin,
-    getManagedTrainers
+    getManagedTrainers,
+    getAllByCompany
 } from '../controllers/companyAdminController.js';
-import { protectCompanyAdmin  } from '../middleware/authenticationMiddleware.js';
+import { protectCompanyAdmin , } from '../middleware/authenticationMiddleware.js';
 import { isCoordinator, protect } from '../middleware/coordinatorAuth.js';
 
 
@@ -31,7 +32,7 @@ router.post('/blocks',protectCompanyAdmin, createBlock);
 router.get('/getStates',protectCompanyAdmin, getStatesByCompany);
 router.get('/getDistricts',protectCompanyAdmin, getDistrictsByCompany);
 router.get('/getBlocks',protectCompanyAdmin, getBlocksByCompany);
-
+router.get('/getAllDetaileByCompany',protectCompanyAdmin, getAllByCompany);
 // --- State Coordinator Management Routes ---
 router.post('/registerStateCoordinator', protectCompanyAdmin, registerStateCoordinator);
 router.post('/coordinatorLogin', protect, coordinatorLogin);
