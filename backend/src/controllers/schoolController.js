@@ -298,7 +298,7 @@ export const createSchoolWithMultipleTrainers = async (req, res) => {
         session.endSession();
     }
 };
-
+0
 export const getSchoolsWithDetails = async (req, res) => {
     try {
         // 1. Get IDs from request
