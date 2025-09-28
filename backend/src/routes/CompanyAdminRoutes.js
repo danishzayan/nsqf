@@ -7,9 +7,15 @@ import {
     createBlock,
     getStatesByCompany,
     getDistrictsByCompany,
-    getBlocksByCompany
+    getBlocksByCompany,
+    registerStateCoordinator,
+    assignToCoordinator,
+    coordinatorLogin,
+    getManagedTrainers
 } from '../controllers/companyAdminController.js';
-import { protectCompanyAdmin } from '../middleware/authenticationMiddleware.js';
+import { protectCompanyAdmin  } from '../middleware/authenticationMiddleware.js';
+import { isCoordinator, protect } from '../middleware/coordinatorAuth.js';
+
 
 const router = express.Router();
 
@@ -19,11 +25,20 @@ router.post('/login', loginCompanyAdmin);
 
 // --- Location Management Routes ---
 // These routes would ideally be protected by middleware to ensure the user is an authenticated CompanyAdmin
-router.post('/states', protectCompanyAdmin, createState);
-router.post('/districts', protectCompanyAdmin, createDistrict);
-router.post('/blocks', protectCompanyAdmin, createBlock);
-router.get('/getStates', protectCompanyAdmin, getStatesByCompany);
-router.get('/getDistricts', protectCompanyAdmin, getDistrictsByCompany);
-router.get('/getBlocks', protectCompanyAdmin, getBlocksByCompany);
+router.post('/states',protectCompanyAdmin, createState);
+router.post('/districts',protectCompanyAdmin, createDistrict);
+router.post('/blocks',protectCompanyAdmin, createBlock);
+router.get('/getStates',protectCompanyAdmin, getStatesByCompany);
+router.get('/getDistricts',protectCompanyAdmin, getDistrictsByCompany);
+router.get('/getBlocks',protectCompanyAdmin, getBlocksByCompany);
+
+// --- State Coordinator Management Routes ---
+router.post('/registerStateCoordinator', protectCompanyAdmin, registerStateCoordinator);
+router.post('/coordinatorLogin', protect, coordinatorLogin);
+router.post('/assignTrainerToCoordinator', protectCompanyAdmin, assignToCoordinator);
+router.get('/getManagedTrainers', protect,  getManagedTrainers);
+
+
+
 
 export default router;

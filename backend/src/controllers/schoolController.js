@@ -3,9 +3,16 @@ import Trade from '../models/Trade.js';
 import Trainer from '../models/Trainer.js';
 import SchoolTrade from '../models/SchoolTrade.js';
 import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
 
 // --- School Management ---
 
+
+const generateToken = (id, companyId) => {
+    return jwt.sign({ id, companyId }, process.env.JWT_SECRET, {
+        expiresIn: '30d', // Token expires in 30 days
+    });
+}
 /**
  * @description Create a new school for the admin's company
  * @route POST /api/management/schools
@@ -189,27 +196,44 @@ export const createTrainer = async (req, res) => {
   }
 };
   
-export const loginTrainer = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const trainer = await Trainer.findOne({ email });
 
-    if (!trainer) {
-      return res.status(404).json({ message: "Trainer not found." });
+export const loginTrainer = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // Find the trainer by email and populate the referenced fields
+        const trainer = await Trainer.findOne({ email })
+            .populate('companyId', 'name') // Fetches the Company and selects only its 'name' field
+            .populate('schoolId', 'name ') // Fetches the School and selects 'name' and 'address'
+            .populate('tradeId', 'name ');  // Fetches the Trade and selects 'name' and 'category'
+
+        if (!trainer) {
+            return res.status(404).json({ message: "Trainer not found." });
+        }
+        if (trainer.password !== password) {
+            return res.status(401).json({ message: "Invalid credentials." });
+        }
+
+        // The trainer object now contains the full details for the populated fields
+        const trainerResponse = { ...trainer.toObject() };
+        
+        // The token payload should still use the raw IDs
+        const token = generateToken(trainer._id, trainer.companyId._id); // Use trainer.companyId._id
+        
+        delete trainerResponse.password;
+        
+        res.status(200).json({
+            message: "Login successful",
+            user: trainerResponse,
+            token,
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: "Server error during login", error: error.message });
     }
-    if (trainer.password !== password) {
-      return res.status(401).json({ message: "Invalid credentials." });
-    }
-    const trainerResponse = { ...trainer.toObject() };
-    delete trainerResponse.password; // ✅ correct field to hide
-    res.status(200).json({
-      message: "Login successful",
-      user: trainerResponse,
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error during login", error: error.message });
-  }
 };
+
+
 
 export const createSchoolWithMultipleTrainers = async (req, res) => {
     // Start a session for the transaction
