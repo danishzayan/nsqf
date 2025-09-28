@@ -96,59 +96,62 @@ import { getDistance } from 'geolib';
 
 export const markDailyStatus = async (req, res) => {
     try {
-        // Latitude and longitude are still needed for the distance check
         const { status, latitude, longitude, date } = req.body;
         const { id: trainerId } = req.user;
 
         const attendanceDate = date ? new Date(date) : new Date();
         const startOfDay = new Date(attendanceDate.setHours(0, 0, 0, 0));
 
+        // 1. Check if attendance has already been marked for the day
         const existingAttendance = await TrainerAttendance.findOne({ trainerId, date: startOfDay });
         if (existingAttendance) {
             return res.status(409).json({ message: `Attendance has already been marked for ${startOfDay.toDateString()}.` });
         }
 
-        let finalStatus = status.toLowerCase();
-        let checkInTime = null;
-        let responseMessage = '';
-
         const trainer = await Trainer.findById(trainerId);
 
-        if (finalStatus === 'present') {
+        // 2. Handle the 'present' case with location validation
+        if (status.toLowerCase() === 'present') {
             if (!latitude || !longitude) {
                 return res.status(400).json({ message: 'Location is required to mark status as present.' });
             }
 
-            // Capture the check-in time
-            checkInTime = new Date();
-            
             const school = await School.findById(trainer.schoolId);
             const distance = getDistance(
                 { latitude, longitude },
                 { latitude: school.location.coordinates[1], longitude: school.location.coordinates[0] }
             );
 
-            // Logic to mark absent if too far remains
-            if (distance > 100) { 
-                finalStatus = 'absent';
-                responseMessage = `You were ${distance} meters away from the school and have been marked absent for ${startOfDay.toDateString()}.`;
-            } else {
-                responseMessage = `Attendance marked as present for ${startOfDay.toDateString()}.`;
+            // --- NEW LOGIC: Block if too far away ---
+            if (distance > 100) {
+                // Return an error and DO NOT save anything
+                return res.status(400).json({ 
+                    message: `You are ${Math.round(distance)} meters away from the school. Your attendance was not marked.` 
+                });
             }
-        } else {
-            responseMessage = `Attendance marked as ${finalStatus} for ${startOfDay.toDateString()}.`;
-        }
+            // --- END OF NEW LOGIC ---
 
-        // Create the attendance record without the location
+            // If the distance is okay, create the 'present' record
+            const newAttendance = await TrainerAttendance.create({
+                trainerId,
+                schoolId: trainer.schoolId,
+                date: startOfDay,
+                status: 'present',
+                checkInTime: new Date(),
+            });
+            return res.status(201).json({ message: `Attendance marked as present for ${startOfDay.toDateString()}.`, data: newAttendance });
+        }
+        
+        // 3. Handle other statuses like 'absent' directly
         const newAttendance = await TrainerAttendance.create({
             trainerId,
             schoolId: trainer.schoolId,
             date: startOfDay,
-            status: finalStatus,
-            checkInTime,
+            status: status.toLowerCase(),
+            checkInTime: null,
         });
 
-        res.status(201).json({ message: responseMessage, data: newAttendance });
+        return res.status(201).json({ message: `Attendance marked as ${status.toLowerCase()} for ${startOfDay.toDateString()}.`, data: newAttendance });
 
     } catch (error) {
         console.error('Error marking daily status:', error);
@@ -170,8 +173,8 @@ export const checkOut = async (req, res) => {
         const attendanceDate = date ? new Date(date) : new Date();
         const startOfDay = new Date(attendanceDate.setHours(0, 0, 0, 0));
 
+        // 1. Fetch attendance record
         const attendanceRecord = await TrainerAttendance.findOne({ trainerId, date: startOfDay });
-
         if (!attendanceRecord) {
             return res.status(404).json({ message: `No attendance record found for ${startOfDay.toDateString()}.` });
         }
@@ -181,24 +184,39 @@ export const checkOut = async (req, res) => {
         if (attendanceRecord.checkOutTime) {
             return res.status(409).json({ message: 'You have already checked out for this day.' });
         }
-        
-        // Set checkout time and location
-        attendanceRecord.checkOutTime = new Date();
-        // attendanceRecord.checkOutLocation = { type: 'Point', coordinates: [longitude, latitude] };
 
-        // --- NEW LOGIC: CALCULATE TOTAL WORK TIME ---
-        if (attendanceRecord.checkInTime) {
-            // 1. Get the difference in milliseconds
-            const durationInMs = attendanceRecord.checkOutTime - attendanceRecord.checkInTime;
+        // 2. Get trainer and school for distance validation
+        const trainer = await Trainer.findById(trainerId);
+        const school = await School.findById(trainer.schoolId);
 
-            // 2. Convert milliseconds to minutes and round it
-            const durationInMinutes = Math.round(durationInMs / (1000 * 60));
-
-            // 3. Save the result to the new schema field
-            attendanceRecord.totalMinutesWorked = durationInMinutes;
+        if (!school || !school.location || !school.location.coordinates) {
+            return res.status(400).json({ message: 'School location is not defined.' });
         }
-        // --- END OF NEW LOGIC ---
-        
+
+        // 3. Calculate distance from school
+        const distance = getDistance(
+            { latitude, longitude },
+            {
+                latitude: school.location.coordinates[1],
+                longitude: school.location.coordinates[0],
+            }
+        );
+
+        // Block checkout if more than 100 meters away
+        if (distance > 100) {
+            return res.status(400).json({
+                message: `You are ${Math.round(distance)} meters away from the school. Check-out not allowed.`,
+            });
+        }
+
+        // 4. Set checkout time and calculate worked minutes
+        attendanceRecord.checkOutTime = new Date();
+
+        if (attendanceRecord.checkInTime) {
+            const durationInMs = attendanceRecord.checkOutTime - attendanceRecord.checkInTime;
+            attendanceRecord.totalMinutesWorked = Math.round(durationInMs / (1000 * 60));
+        }
+
         await attendanceRecord.save();
 
         res.status(200).json({ message: 'Check-out successful.', data: attendanceRecord });
