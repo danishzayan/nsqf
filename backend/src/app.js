@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import connectDB from "./config/db.js";
 // import companyRoutes from './routes/CompanyRoutes.js';
-import superadminRoutes from './routes/SuperadminRoutes.js';
+import superadminRoutes from './routes/SuperAdminRoutes.js';
 import companyAdminRoutes from './routes/CompanyAdminRoutes.js';
 import managementRoutes from './routes/managementRoutes.js';
 import trainerRoutes from './routes/trainerRoutes.js';
