@@ -2,6 +2,8 @@ import School from '../models/School.js';
 import Trade from '../models/Trade.js';
 import Trainer from '../models/Trainer.js';
 import SchoolTrade from '../models/SchoolTrade.js';
+import Block from '../models/Block.js';
+import District from '../models/District.js';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 
@@ -298,80 +300,127 @@ export const createSchoolWithMultipleTrainers = async (req, res) => {
         session.endSession();
     }
 };
-0
+
 export const getSchoolsWithDetails = async (req, res) => {
     try {
-        // 1. Get IDs from request
-        const { blockId } = req.query; // Changed from req.params to req.query
-        const { companyId } = req.user; // From your authentication middleware
+        // 1. Get all possible IDs from the request query
+        const { blockId, districtId, stateId } = req.query;
+        const { companyId } = req.user;
 
-        // Validate input
-        if (!blockId) {
-            return res.status(400).json({ message: 'Block ID is required.' });
+        // Validate that at least one ID is provided
+        if (!blockId && !districtId && !stateId) {
+            return res.status(400).json({ message: 'Please provide a blockId, districtId, or stateId.' });
+        }
+        
+        if (!companyId) {
+            return res.status(401).json({ message: 'Company ID not found. User may not be authenticated.' });
         }
 
-        // 2. Define the Aggregation Pipeline
+        // 2. Dynamically build the initial match query
+        const matchQuery = {
+            companyId: new mongoose.Types.ObjectId(companyId)
+        };
+
+        if (blockId) {
+            // Easiest case: we have the blockId directly
+            matchQuery.blockId = new mongoose.Types.ObjectId(blockId);
+        } else if (districtId) {
+            // Find all blocks belonging to the given district
+            const blocksInDistrict = await Block.find({ districtId: new mongoose.Types.ObjectId(districtId) }).select('_id');
+            const blockIds = blocksInDistrict.map(b => b._id);
+            
+            // If no blocks are found in the district, no schools can match
+            if (blockIds.length === 0) return res.status(200).json([]);
+
+            matchQuery.blockId = { $in: blockIds };
+        } else if (stateId) {
+            // Find all districts belonging to the given state
+            const districtsInState = await District.find({ stateId: new mongoose.Types.ObjectId(stateId) }).select('_id');
+            const districtIds = districtsInState.map(d => d._id);
+            
+            if (districtIds.length === 0) return res.status(200).json([]);
+
+            // Now find all blocks within those districts
+            const blocksInState = await Block.find({ districtId: { $in: districtIds } }).select('_id');
+            const blockIds = blocksInState.map(b => b._id);
+
+            if (blockIds.length === 0) return res.status(200).json([]);
+
+            matchQuery.blockId = { $in: blockIds };
+        }
+
+        // 3. Define the main Aggregation Pipeline
+        // The first stage is our dynamically created matchQuery
         const pipeline = [
-            // STAGE 1: Filter schools by companyId and blockId.
-            // This is the most important step for performance.
-            {
-                $match: {
-                    companyId: new mongoose.Types.ObjectId(companyId),
-                    blockId: new mongoose.Types.ObjectId(blockId)
-                }
-            },
-            // STAGE 2: Join with the 'trainers' collection.
+            { $match: matchQuery },
+
+            // All subsequent stages for joining and shaping data remain the same
             {
                 $lookup: {
-                    from: 'trainers',       // The collection to join with
-                    localField: '_id',          // Field from the 'schools' collection
-                    foreignField: 'schoolId', // Field from the 'trainers' collection
-                    as: 'trainers'          // Name for the new array field
+                    from: 'blocks',
+                    localField: 'blockId',
+                    foreignField: '_id',
+                    as: 'block'
                 }
             },
-            // STAGE 3: Join with the 'trades' collection.
+            { $unwind: { path: '$block', preserveNullAndEmptyArrays: true } },
             {
                 $lookup: {
-                    from: 'trades',
-                    localField: 'tradeIds', // Field from the 'schools' collection (array)
-                    foreignField: '_id',      // Field from the 'trades' collection
-                    as: 'trades'
+                    from: 'districts',
+                    localField: 'block.districtId',
+                    foreignField: '_id',
+                    as: 'district'
                 }
             },
-            // STAGE 4: Shape the final output.
-            // We only want specific fields, not the entire documents.
+            { $unwind: { path: '$district', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'states',
+                    localField: 'district.stateId',
+                    foreignField: '_id',
+                    as: 'state'
+                }
+            },
+            { $unwind: { path: '$state', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'trainers',
+                    let: { schoolId: '$_id' },
+                    pipeline: [
+                        { $match: { $expr: { $eq: ['$schoolId', '$$schoolId'] } } },
+                        { $lookup: { from: 'trades', localField: 'tradeId', foreignField: '_id', as: 'tradeInfo' } },
+                        { $unwind: { path: '$tradeInfo', preserveNullAndEmptyArrays: true } },
+                        { $project: { _id: 1, fullName: 1, email: 1, phone: 1, tradeName: '$tradeInfo.name' } }
+                    ],
+                    as: 'trainers'
+                }
+            },
             {
                 $project: {
-                    _id: 1, // Keep the school ID
-                    name: 1,  // Keep the school name
-                    // Transform the trades array to be an array of names
-                    trades: {
-                        $map: {
-                            input: '$trades',
-                            as: 'trade',
-                            in: '$$trade.name'
-                        }
-                    },
-                    // Transform the trainers array to be an array of names
-                    trainers: {
-                        $map: {
-                            input: '$trainers',
-                            as: 'trainer',
-                            in: '$$trainer.fullName'
-                        }
-                    }
+                    _id: 1,
+                    name: 1,
+                    uid: 1,
+                    address: 1,
+                    location: 1,
+                    blockName: '$block.name',
+                    districtName: '$district.name',
+                    stateName: '$state.name',
+                    trainers: 1
                 }
             }
         ];
 
-        // 3. Execute the pipeline
+        // 4. Execute the pipeline
         const schools = await School.aggregate(pipeline);
+        
+        // Return 404 only if schools are not found after a valid search
         if (!schools || schools.length === 0) {
-            return res.status(404).json({ message: 'No schools found for the given block and company.' });
+            return res.status(404).json({ message: 'No schools found for the given criteria.' });
         }
         res.status(200).json(schools);
 
     } catch (error) {
+        console.error('Error fetching school details:', error);
         res.status(500).json({ message: 'Error fetching school details', error: error.message });
     }
 };
