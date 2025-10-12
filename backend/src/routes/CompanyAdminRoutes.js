@@ -12,7 +12,8 @@ import {
     assignToCoordinator,
     coordinatorLogin,
     getManagedTrainers,
-    getAllByCompany
+    getAllByCompany,
+    assignStatesToCoordinator
 } from '../controllers/companyAdminController.js';
 import { protectCompanyAdmin , } from '../middleware/authenticationMiddleware.js';
 import { isCoordinator, protect } from '../middleware/coordinatorAuth.js';
@@ -35,7 +36,9 @@ router.get('/getBlocks',protectCompanyAdmin, getBlocksByCompany);
 router.get('/getAllDetaileByCompany',protectCompanyAdmin, getAllByCompany);
 // --- State Coordinator Management Routes ---
 router.post('/registerStateCoordinator', protectCompanyAdmin, registerStateCoordinator);
-router.post('/coordinatorLogin', protect, coordinatorLogin);
+router.post('/coordinatorLogin', coordinatorLogin);
+// router.put('/assignCoordinatorToMultipleTrainers', protectCompanyAdmin, assignToCoordinator);
+router.put('/coordinators/:coordinatorId/assign-states', assignStatesToCoordinator);
 router.post('/assignTrainerToCoordinator', protectCompanyAdmin, assignToCoordinator);
 router.get('/getManagedTrainers', protect,  getManagedTrainers);
 

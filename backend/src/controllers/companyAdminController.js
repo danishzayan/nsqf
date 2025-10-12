@@ -6,7 +6,7 @@ import StateCoordinator from '../models/StateLevelVc.js'; // Make sure the path 
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 
-  export const   generateToken = (id, companyId) => {
+  export const  generateToken = (id, companyId) => {
     return jwt.sign({ id, companyId }, process.env.JWT_SECRET, {
         expiresIn: '30d', // Token expires in 30 days
     });
@@ -554,12 +554,14 @@ export const coordinatorLogin = async (req, res) => {
         }
 
         // 2. Find the coordinator by email.
-        // We must explicitly select the password because it is hidden by default in the model.
+        // We explicitly select the password because it's hidden by default in the model.
         const coordinator = await StateCoordinator.findOne({ 'personalInfo.email': email })
             .select('+loginCredentials.password');
 
-        // 3. Check if the coordinator exists and if the password matches.
-        if (coordinator && (await coordinator.matchPassword(password))) {
+        // 3. Check if coordinator exists and if the password matches.
+        // This is a direct string comparison for plaintext passwords.
+        if (coordinator && password === coordinator.loginCredentials.password) {
+            
             // 4. Generate a token containing the user's ID, company ID, and role.
             const token = generateToken(
                 coordinator._id,
@@ -584,5 +586,33 @@ export const coordinatorLogin = async (req, res) => {
     } catch (error) {
         console.error('Error during coordinator login:', error);
         res.status(500).json({ message: 'Server error during login.' });
+    }
+};
+
+export const assignStatesToCoordinator = async (req, res) => {
+    try {
+        const { coordinatorId } = req.params; // Get ID from the URL
+        const { stateIds } = req.body; // Get an array of state IDs from the request
+
+        if (!stateIds || !Array.isArray(stateIds)) {
+            return res.status(400).json({ message: 'Please provide a valid array of stateIds.' });
+        }
+
+        const coordinator = await StateCoordinator.findById(coordinatorId);
+        if (!coordinator) {
+            return res.status(404).json({ message: 'Coordinator not found.' });
+        }
+
+        // Update the coordinator's managedStateIds field
+        coordinator.managedStateIds = stateIds;
+        await coordinator.save();
+
+        res.status(200).json({
+            message: 'Coordinator successfully assigned to states.',
+            data: coordinator
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: 'Server error.', error: error.message });
     }
 };

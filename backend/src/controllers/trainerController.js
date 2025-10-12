@@ -89,6 +89,7 @@ import School from '../models/School.js';
 import Trainer from '../models/Trainer.js';
 // import Student from '../models/Student.js';
 import TrainerAttendance from '../models/Attendance.js';
+import AttendanceCorrectionRequest from '../models/AttendanceCorrectionRequest.js';
 import { getDistance } from 'geolib';
 // controllers/trainerAttendanceController.js
 // import Trainer from '../models/Trainer.js';
@@ -269,5 +270,54 @@ export const getCalendarAttendance = async (req, res) => {
     } catch (error) {
         console.error('Error fetching calendar attendance:', error);
         res.status(500).json({ message: 'Server error.' });
+    }
+};
+
+// Controller for the trainer correction request of attendance
+export const createCorrectionRequest = async (req, res) => {
+    try {
+        const { attendanceId, reason } = req.body;
+        const trainerId = req.user.id; // From authenticated trainer's token
+
+        // Find the original attendance record
+        const attendance = await Attendance.findById(attendanceId);
+
+        // Validation Checks
+        if (!attendance) {
+            return res.status(404).json({ message: "Attendance record not found." });
+        }
+        if (attendance.status !== 'absent') {
+            return res.status(400).json({ message: "Can only request correction for an 'absent' record." });
+        }
+
+        // --- THE 4-DAY RULE ---
+        const attendanceDate = new Date(attendance.date);
+        const today = new Date();
+        const fourDays = 4 * 24 * 60 * 60 * 1000; // 4 days in milliseconds
+        
+        if (today - attendanceDate > fourDays) {
+            return res.status(403).json({ message: "Correction request denied. The 4-day window has passed." });
+        }
+        
+        // Find the trainer to get their coordinatorId
+        const trainer = await Trainer.findById(trainerId);
+        if (!trainer || !trainer.coordinatorId) {
+             return res.status(400).json({ message: "You are not assigned to a coordinator." });
+        }
+
+        // Create the new request
+        const newRequest = new AttendanceCorrectionRequest({
+            attendanceId,
+            reason,
+            trainerId,
+            coordinatorId: trainer.coordinatorId,
+            companyId: req.user.companyId
+        });
+
+        await newRequest.save();
+        res.status(201).json({ message: "Your request has been sent to your coordinator for approval." });
+
+    } catch (error) {
+        res.status(500).json({ message: 'Server error.', error: error.message });
     }
 };

@@ -40,9 +40,10 @@ const trainerSchema = new Schema(
       enum: ['active', 'inactive', ],
       default: 'active',
     },
-       coordinatorId: {
+     // ✅ This is the new field that links the Trainer to their manager.
+    coordinatorId: {
         type: Schema.Types.ObjectId,
-        ref: 'StateCoordinator' // Must match the model name of your coordinator
+        ref: 'StateCoordinator' // This must match the model name
     }
   },
   { timestamps: true }
