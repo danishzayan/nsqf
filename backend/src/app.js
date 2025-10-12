@@ -6,6 +6,7 @@ import superadminRoutes from './routes/SuperAdminRoutes.js';
 import companyAdminRoutes from './routes/CompanyAdminRoutes.js';
 import managementRoutes from './routes/managementRoutes.js';
 import trainerRoutes from './routes/trainerRoutes.js';
+import stateCordinatorRoutes from './routes/stateCoordinatorRoutes.js';
 import dotenv from "dotenv";
 dotenv.config();
 // Import routes
@@ -40,6 +41,7 @@ app.use('/api/superadmins', superadminRoutes);
 app.use('/api/companyadmins', companyAdminRoutes);
 app.use('/api/management', managementRoutes);
 app.use('/api/trainers', trainerRoutes);
+app.use('/api/stateCoordinator', stateCordinatorRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running...");

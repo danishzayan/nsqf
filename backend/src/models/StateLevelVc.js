@@ -3,36 +3,30 @@ import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 const stateCoordinatorSchema = new Schema({
-    // Grouping for better organization
     personalInfo: {
         name: { type: String, required: true },
         email: { type: String, required: true, unique: true },
         phone: { type: String, required: true },
     },
     loginCredentials: {
-        username: { type: String, required: false },
-        password: { type: String, required: true },
+        username: { type: String, required: false, unique: true, sparse: true }, // Added unique and sparse
+        password: { type: String, required: true }, // 🚨 REMINDER: Hash this password!
     },
-    // The state they operate in
-    stateId: {
+    // ✅ This is the key change. Assigns the coordinator to one or more states.
+    managedStateIds: [{
         type: Schema.Types.ObjectId,
         ref: 'State',
         required: true
-    },
-    // The list of trainers this coordinator manages
-    managedTrainers: [{
-        type: Schema.Types.ObjectId,
-        ref: 'Trainer' // Make sure ref name matches the Trainer model
     }],
     companyId: {
         type: Schema.Types.ObjectId,
         ref: 'Company',
         required: true
     }
-    // The 'assignedSchools' field is removed to prevent data duplication.
-    // You can derive this list from the schools of the 'managedTrainers'.
-
 }, { timestamps: true });
+
+// Optional: Add an index for efficient lookups
+stateCoordinatorSchema.index({ companyId: 1, 'personalInfo.email': 1 });
 
 const StateCoordinator = mongoose.model('StateCoordinator', stateCoordinatorSchema);
 export default StateCoordinator;
